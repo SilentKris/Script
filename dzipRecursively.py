@@ -11,28 +11,40 @@ if not os.path.exists(release_dir):
     os.mkdir(release_dir)
 curPATH = os.getcwd()
 
-def dzip(PATH):
-    curPATH = PATH
+def dzip(curPATH):
     zfileList = os.listdir(curPATH)
-    for zfile in zfileList:
-        if zfile.endswith('.fnt'):
-            fntFile = os.path.join(curPATH, zfile)
-            shutil.copy2(fntFile, release_dir)
-        elif zfile.endswith('.zip'):
-            filePath = os.path.join(curPATH, zfile)
-            zFile = zipfile.ZipFile(filePath, "r")
-            dzFile = filePath[:-len('.zip')]
-            if os.path.exists(dzFile):
-                shutil.rmtree(dzFile)
-            else:
-                os.mkdir(dzFile)
+    for file in zfileList:
+        file = os.path.join(curPATH, file)
+        if zipfile.is_zipfile(file):
+            zfilePath = file
+            zFile = zipfile.ZipFile(zfilePath, "r")
+            dzFilePath = zfilePath[:-len('.zip')]
+            if os.path.exists(dzFilePath):
+                shutil.rmtree(dzFilePath)
+            os.mkdir(dzFilePath)
             for zipFile in zFile.namelist():
-                zFile.extract(zipFile, dzFile)
-                dzip(dzFile)
+                zFile.extract(zipFile, dzFilePath)
+                dzip(dzFilePath)
         else:
             continue
-        
+def Search(Suffix, curPath, release_Dir):
+    fileList = os.listdir(curPath)
+    if 'release' in fileList:
+        fileList.remove('release')
+    for file in fileList:
+        filePath = os.path.join(curPath, file) 
+        if os.path.isdir(filePath):
+            Search(Suffix, filePath, release_Dir)
+        elif os.path.isfile(filePath):
+            if filePath[-len(Suffix):] == Suffix:
+                shutil.copy2(filePath, release_Dir)
+        else:
+            continue
+    
+    
+     
 dzip(curPATH)
+Search('.fnt', curPATH, release_dir)
 for file in os.listdir(curPATH):
     filePath = os.path.join(curPATH, file)
     if os.path.isdir(filePath) and filePath != release_dir:
